@@ -47,7 +47,11 @@ class Level:
 		# fire 
 		fire_layout = import_csv_layout(level_data['torch'])
 		self.fire_sprites = self.create_tile_group(fire_layout, 'torch')
-
+  
+		# sound 
+		self.finis = pygame.mixer.Sound('./sound/potion.wav')
+	
+	# Create map and all things on background
 	def create_tile_group(self,layout,type):
 		sprite_group = pygame.sprite.Group()
 
@@ -79,6 +83,7 @@ class Level:
 					sprite_group.add(sprite)
 		return sprite_group
 	
+	# Create enemy 
 	def create_enemy_group(self, layout):
 		sprite_group = pygame.sprite.Group()
 
@@ -93,6 +98,7 @@ class Level:
 
 		return sprite_group
  
+	# Create player
 	def player_setup(self, layout):
 		for row_index, row in enumerate(layout):
 			for col_index,val in enumerate(row):
@@ -107,7 +113,8 @@ class Level:
 					bigger_img = pygame.transform.scale(hat_surface, (int(size[0]*2), int(size[1]*2)))
 					sprite = StaticTile(tile_size, x, y, bigger_img)
 					self.goal.add(sprite)     
-          
+      
+    # Create jump animation 
 	def create_jump_particles(self,pos):
 		if self.player.sprite.facing_right:
 			pos -= pygame.math.Vector2(0,17)
@@ -116,6 +123,7 @@ class Level:
 		jump_particle_sprite = ParticleEffect(pos,'jump')
 		self.dust_sprite.add(jump_particle_sprite)
 	
+	# Collision
 	def horizontal_movement_collision(self):
 		player = self.player.sprite
 		player.rect.x += player.direction.x * player.speed
@@ -169,6 +177,7 @@ class Level:
 						enemy.rect.top = sprite.rect.bottom
 						enemy.direction.y = 0		
 
+	# Map scrolling, camera
 	def scroll_player_x(self):
 		player = self.player.sprite
 		player_x = player.rect.centerx
@@ -190,6 +199,7 @@ class Level:
 		else:
 			self.player_on_ground = False
 
+	# Create landing dust animation
 	def create_landing_dust(self):
 		if not self.player_on_ground and self.player.sprite.on_ground and not self.dust_sprite.sprites():
 			if self.player.sprite.facing_right:
@@ -199,6 +209,7 @@ class Level:
 			fall_dust_particle = ParticleEffect(self.player.sprite.rect.midbottom - offset,'land')
 			self.dust_sprite.add(fall_dust_particle)
 
+	# Create a enemy animation
 	def enemy_attack(self):
 		current_time = time.time()
 
@@ -209,9 +220,11 @@ class Level:
 
 		player = self.player.sprite
 		for enemy in self.enemy_sprites.sprites():
-			if player.rect.x >= (enemy.rect.centerx - (3 * enemy.rect.width)) and player.rect.x < enemy.rect.centerx:
-				enemy.attack(player)
-    
+			if enemy.alives:
+				if player.rect.x >= (enemy.rect.centerx - (3 * enemy.rect.width)) and player.rect.x < enemy.rect.centerx:
+					enemy.attack(player)
+	
+	# Check if enemy are still alive
 	def check_enemy_health(self):
 		for enemy in self.enemy_sprites.sprites():
 			if enemy.health <= 0:
@@ -219,13 +232,29 @@ class Level:
 				enemy.alives = False
 				enemy.update_status()
     
+    # Health
 	def draw_health(self,player1,x,y):
 		player = player1.sprite
 		ration = player.health / 100
 		pygame.draw.rect(self.display_surface, (255,255,255),(x-2,y-2, 204, 14))
 		pygame.draw.rect(self.display_surface, (139,0,0),(x,y, 200, 10))
 		pygame.draw.rect(self.display_surface, (255,0,0),(x,y, 200 * ration, 10))
-        
+    
+    # Check if character is still alive
+	def menu_call(self,menu_reboot):
+		charecter = self.player.sprite
+		if charecter.health <= 0:
+			menu_reboot()
+	
+	def finish(self, menu_reboot):
+		player = self.player.sprite
+		finish = self.goal.sprite
+		
+		if player.rect.colliderect(finish.rect):
+			self.finis.play()
+			time.sleep(2)
+			menu_reboot()
+    
 	def run(self):
 		# run the entire game / level
 		# terrain 

@@ -23,6 +23,9 @@ class Enemy(pygame.sprite.Sprite):
         self.on_ceiling = False
         self.on_left = False
         self.on_right = False
+        
+        # sound 
+        self.death = pygame.mixer.Sound('./sound/take_damage.wav')
 
     def import_character_assests(self):
         character_path = './graphics/enemy/'
@@ -37,6 +40,7 @@ class Enemy(pygame.sprite.Sprite):
         
         # loop over frame index    
         if self.alives == False:
+            
             self.frame_index = 3
         else:
             self.frame_index += self.animation_speed
@@ -73,8 +77,8 @@ class Enemy(pygame.sprite.Sprite):
         self.status = 'attack'
         attaking_rect = pygame.Rect(self.rect.centerx - self.rect.width,self.rect.y,self.rect.width, self.rect.height)
         if attaking_rect.colliderect(target.rect):
+                self.death.play()
                 target.health -= 10
-        # pygame.draw.rect(surface, (0,255,0), attaking_rect)
     
     def update_status(self):
         if self.alives == False:

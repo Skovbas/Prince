@@ -24,6 +24,7 @@ class Prince(pygame.sprite.Sprite):
         self.jump_speed = -13
         self.jump_start_time = 0
         self.jump_delay = 580
+        self.collision_rect = pygame.Rect(self.rect.topleft, (50,self.rect.height))
         
         # health
         self.health = 100
@@ -38,7 +39,12 @@ class Prince(pygame.sprite.Sprite):
         self.on_left = False
         self.on_right = False
 
-    # import images for animation
+        # sound 
+        self.distance_r = 0
+        self.distance_l = 0
+        self.step = pygame.mixer.Sound('./sound/step.wav')
+        
+# import images for animation
     def import_character_assests(self):
         character_path = './graphics/charecter/'
         self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': []}
@@ -101,12 +107,22 @@ class Prince(pygame.sprite.Sprite):
         
         if keys[pygame.K_RIGHT]:
             self.direction.x = 1
+            if self.on_ground:
+                self.distance_r += 1
             self.facing_left = False
             self.facing_right = True
+            if self.distance_r >= 10:
+                self.step.play()
+                self.distance_r = 0
         elif keys[pygame.K_LEFT]:
             self.direction.x = -1
+            if self.on_ground:
+                self.distance_l += 1
             self.facing_left = True
             self.facing_right = False
+            if self.distance_l >= 10:
+                self.step.play()
+                self.distance_l = 0
         else:
             self.direction.x = 0
             
